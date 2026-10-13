@@ -1,4 +1,5 @@
 import { config } from "../lib/config.js";
+import { GROQ_MODEL } from "../lib/facts.js";
 import { send } from "../lib/http.js";
 import { isPersistent } from "../lib/store.js";
 
@@ -9,7 +10,7 @@ export default function handler(req, res) {
     service: "fotothis-api",
     plantnet: Boolean(process.env.PLANTNET_API_KEY),
     groq: Boolean(process.env.GROQ_API_KEY),
-    groqModel: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+    groqModel: GROQ_MODEL,
     secret: Boolean(process.env.API_SECRET),
     storage: isPersistent ? "upstash" : "memory",
     appAttest: config.appAttestMode,
