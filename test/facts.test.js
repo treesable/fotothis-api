@@ -10,7 +10,7 @@ test("parses the JSON array, ignoring stray text", () => {
 });
 
 test("cache key per species and language", () => {
-  assert.equal(cacheKey("Hedera helix", "da"), "facts:v3:da:hedera helix");
+  assert.equal(cacheKey("Hedera helix", "da"), "facts:v4:da:hedera helix");
 });
 
 import { prompt } from "../lib/facts.js";
