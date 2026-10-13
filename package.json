@@ -1,0 +1,11 @@
+{
+  "name": "fotothis-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "FotoThis species ID: Pl@ntNet names, Groq facts. Never decides an unlock.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}
