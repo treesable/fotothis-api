@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cleanLatinName, parseResult, projectFor } from "../lib/plantnet.js";
+import { cleanLatinName, parseResult, projectFor, titleCase } from "../lib/plantnet.js";
 
 test("regional project from position", () => {
   assert.equal(projectFor(55.68, 12.57), "k-northern-europe", "Copenhagen");
@@ -33,4 +33,11 @@ test("no common name falls back to the Latin name", () => {
 test("cleans author abbreviations", () => {
   assert.equal(cleanLatinName("Hedera helix L."), "Hedera helix");
   assert.equal(cleanLatinName("Mentha ×piperita"), "Mentha × piperita");
+});
+
+test("common names read like a field guide", () => {
+  assert.equal(titleCase("rose of sharon"), "Rose of Sharon");
+  assert.equal(titleCase("lily of the valley"), "Lily of the Valley");
+  assert.equal(titleCase("common ivy"), "Common Ivy");
+  assert.equal(titleCase("st. john's-wort"), "St. John's-wort");
 });
