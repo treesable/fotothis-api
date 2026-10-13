@@ -2,7 +2,7 @@
 // never waits for this). Body JSON { image: base64 JPEG, lat?, lng?, lang? }.
 // Headers: x-api-secret, x-device-id, x-app-attest-key-id + x-app-attest-assertion (over the
 // exact body bytes), x-transaction-id (App Store, once subscriptions exist).
-// Answers: 200 { species | null, facts, remainingToday }, 429 { queued: true } over the trial cap.
+// Answers: 200 { species | null, facts, factsSource ("wikipedia" | "model"), remainingToday }, 429 { queued: true } over the trial cap.
 import { AttestError, verifyAssertion } from "../../lib/appattest.js";
 import { tierFor } from "../../lib/appstore.js";
 import { refundId, secondsUntilReset, takeId } from "../../lib/cap.js";
@@ -59,9 +59,9 @@ export default async function handler(req, res) {
       await refundId(device, tier);
       return send(res, 200, { species: null, facts: [], remainingToday: allowance.remaining === null ? null : allowance.remaining + 1 });
     }
-    const facts = await factsFor(species, lang);
-    console.log(`identify: ${species.scientificName} ${species.score} (${tier})`);
-    return send(res, 200, { species, facts, remainingToday: allowance.remaining });
+    const { facts, source } = await factsFor(species, lang);
+    console.log(`identify: ${species.scientificName} ${species.score} (${tier}), facts from ${source}`);
+    return send(res, 200, { species, facts, factsSource: source, remainingToday: allowance.remaining });
   } catch (error) {
     await refundId(device, tier);
     console.error("identify:", error);

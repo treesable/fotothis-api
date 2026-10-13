@@ -24,6 +24,10 @@ beforeEach(() => {
         scientificNameWithoutAuthor: "Hedera helix", commonNames: ["common ivy"], family: { scientificNameWithoutAuthor: "Araliaceae" },
       } }] });
     }
+    if (String(url).includes("wikipedia")) {
+      calls.wikipedia = (calls.wikipedia ?? 0) + 1;
+      return Response.json({ query: { pages: { 1: { extract: "Hedera helix is an evergreen climbing plant. ".repeat(10) } } } });
+    }
     calls.groq++;
     return Response.json({ choices: [{ message: { content: '["Ivy flowers in autumn.", "Two.", "Three."]' } }] });
   };
@@ -43,6 +47,7 @@ test("names the plant with facts", async () => {
   assert.equal(res.body.species.scientificName, "Hedera helix");
   assert.equal(res.body.species.commonName, "Common Ivy");
   assert.deepEqual(res.body.facts, ["Ivy flowers in autumn.", "Two.", "Three."]);
+  assert.equal(res.body.factsSource, "wikipedia");
   assert.equal(res.body.remainingToday, 2);
 });
 
