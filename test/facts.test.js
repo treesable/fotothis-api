@@ -10,5 +10,5 @@ test("parses the JSON array, ignoring stray text", () => {
 });
 
 test("cache key per species and language", () => {
-  assert.equal(cacheKey("Hedera helix", "da"), "facts:v1:da:hedera helix");
+  assert.equal(cacheKey("Hedera helix", "da"), "facts:v2:da:hedera helix");
 });
