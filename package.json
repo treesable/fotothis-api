@@ -4,8 +4,13 @@
   "private": true,
   "type": "module",
   "description": "FotoThis species ID: Pl@ntNet names, Groq facts. Never decides an unlock.",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
   }
 }

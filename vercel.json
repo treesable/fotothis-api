@@ -1,5 +1,13 @@
 {
   "functions": {
-    "api/**/*.js": { "maxDuration": 25 }
-  }
+    "api/**/*.js": {
+      "maxDuration": 25
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/retention",
+      "schedule": "15 3 * * *"
+    }
+  ]
 }
