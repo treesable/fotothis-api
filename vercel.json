@@ -9,5 +9,15 @@
       "path": "/api/cron/retention",
       "schedule": "15 3 * * *"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/v1/members/me",
+      "destination": "/api/v1/members?route=me"
+    },
+    {
+      "source": "/api/v1/challenges/:path*",
+      "destination": "/api/v1/challenges?route=:path*"
+    }
   ]
 }

@@ -57,3 +57,14 @@ test("codes look like OAK-482 and read back forgivingly", () => {
   assert.equal(normalizeCode(42), null);
   assert.equal(WORDS.every((word) => !/[0-9]/.test(word)), true);
 });
+
+test("routes read the same with and without Vercel's rewrite", async () => {
+  const { routeOf } = await import("../lib/challenges/http.js");
+  const at = (url) => ({ url });
+  assert.equal(routeOf(at("/api/v1/challenges?route=abc%2Fboard"), "challenges"), "challenges/abc/board");
+  assert.equal(routeOf(at("/api/v1/challenges/abc/board"), "challenges"), "challenges/abc/board");
+  assert.equal(routeOf(at("/api/v1/challenges"), "challenges"), "challenges");
+  assert.equal(routeOf(at("/api/v1/challenges?route="), "challenges"), "challenges");
+  assert.equal(routeOf(at("/api/v1/members?route=me"), "members"), "members/me");
+  assert.equal(routeOf(at("/api/v1/members/me"), "members"), "members/me");
+});
