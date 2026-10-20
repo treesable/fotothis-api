@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 25
+      "maxDuration": 25,
+      "includeFiles": "{db/migrations/**,assets/**}"
     }
   },
   "crons": [
@@ -11,6 +12,18 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "destination": "/api/site?page=aasa"
+    },
+    {
+      "source": "/icon.png",
+      "destination": "/api/site?page=icon"
+    },
+    {
+      "source": "/c/:code",
+      "destination": "/api/site?page=invite&code=:code"
+    },
     {
       "source": "/api/v1/members/me",
       "destination": "/api/v1/members?route=me"
