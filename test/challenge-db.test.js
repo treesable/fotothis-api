@@ -25,6 +25,20 @@ test("migrations apply once", { skip }, async () => {
   assert.deepEqual(rows.map((row) => row.name), ["001_challenges.sql"]);
 });
 
+test("two cold starts migrating at once both succeed, each migration applied once", { skip }, async () => {
+  await query("drop schema public cascade; create schema public;");
+  // A second copy of the module = a second serverless instance with its own pool.
+  const other = await import("../lib/db.js?instance=2");
+  await _closeForTests();
+  try {
+    await Promise.all([migrate(), other.migrate()]);
+    const { rows } = await query("select name from schema_migrations");
+    assert.deepEqual(rows.map((row) => row.name), ["001_challenges.sql"]);
+  } finally {
+    await other._closeForTests();
+  }
+});
+
 test("the database refuses impossible values too", { skip }, async () => {
   await assert.rejects(addMember({ nickname: "x".repeat(17) }), /check/, "Nickname max 16");
   await assert.rejects(addMember({ nickname: "" }), /check/);
