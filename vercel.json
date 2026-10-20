@@ -25,6 +25,18 @@
       "destination": "/api/site?page=invite&code=:code"
     },
     {
+      "source": "/",
+      "destination": "/api/site?page=home"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/api/site?page=privacy"
+    },
+    {
+      "source": "/terms",
+      "destination": "/api/site?page=terms"
+    },
+    {
       "source": "/api/v1/members/me",
       "destination": "/api/v1/members?route=me"
     },

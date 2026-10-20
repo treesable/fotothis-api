@@ -2,11 +2,15 @@
 //   /.well-known/apple-app-site-association → universal links for /c/*
 //   /icon.png                                → the app icon (invite page, link previews)
 //   /c/<code>                                → the friend's invite page
+//   /, /privacy, /terms                      → home, privacy policy, terms of use
 import { readFileSync } from "node:fs";
 import { normalizeCode } from "../lib/challenges/codes.js";
 import { rateLimit } from "../lib/challenges/http.js";
 import { appSiteAssociation, invitePage } from "../lib/challenges/invite-page.js";
 import { ApiError, previewByCode } from "../lib/challenges/service.js";
+import { homePage, privacyPage, termsPage } from "../lib/site-pages.js";
+
+const PAGES = { home: homePage, privacy: privacyPage, terms: termsPage };
 
 const ICON = readFileSync(new URL("../assets/icon-512.png", import.meta.url));
 
@@ -25,6 +29,12 @@ export default async function handler(req, res) {
     res.setHeader("Content-Type", "image/png");
     res.setHeader("Cache-Control", "public, max-age=86400");
     return res.end(ICON);
+  }
+  if (PAGES[page]) {
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    return res.end(PAGES[page]());
   }
   if (page === "invite") {
     const raw = url.searchParams.get("code") ?? "";

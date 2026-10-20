@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { after, beforeEach, test } from "node:test";
 import { createChallenge, createMember, join } from "../lib/challenges/service.js";
 import { appSiteAssociation, escapeHtml, invitePage } from "../lib/challenges/invite-page.js";
@@ -36,6 +37,19 @@ test("the icon is served", async () => {
   const res = await get("/api/site?page=icon");
   assert.equal(res.headers["content-type"], "image/png");
   assert.equal(res.body.subarray(1, 4).toString(), "PNG");
+});
+
+test("home, privacy and terms pages are served, and vercel.json routes them", async () => {
+  for (const [page, text] of [["home", "Snap nature"], ["privacy", "Pl@ntNet"], ["terms", "Standard End User License Agreement"]]) {
+    const res = await get(`/api/site?page=${page}`);
+    assert.equal(res.statusCode, 200, page);
+    assert.match(res.headers["content-type"], /text\/html/);
+    assert.ok(res.body.includes(text), page);
+  }
+  const { rewrites } = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  for (const [source, page] of [["/", "home"], ["/privacy", "privacy"], ["/terms", "terms"]]) {
+    assert.equal(rewrites.find((r) => r.source === source)?.destination, `/api/site?page=${page}`);
+  }
 });
 
 test("nicknames can't inject HTML", () => {
