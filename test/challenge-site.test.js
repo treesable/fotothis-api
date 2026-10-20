@@ -75,6 +75,7 @@ test("the invite page shows the inviter, the crew and the code", { skip: skipWit
   assert.match(res.body, /Sofie/);
   assert.match(res.body, /You\?/);
   assert.match(res.body, new RegExp(`Your invite code: <b>${code}</b>`));
+  assert.match(res.body, new RegExp(`href="fotothis://c/${code}"`), "Opens the installed app when the universal link doesn't");
   assert.match(res.body, /og:title/);
   assert.equal(/points|pts|steps/i.test(res.body.replace(/<style>[\s\S]*?<\/style>/, "")), false, "No stats on the page");
 });
