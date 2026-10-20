@@ -49,7 +49,11 @@ test("a full round: create, join, progress, board", { skip }, async () => {
   assert.equal(preview.body.inviter.nickname, "Marcel");
 
   const sofie = await newMember("Sofie");
-  assert.equal((await call("POST", `challenges/${code}/join`, { as: sofie, body: { shareSteps: true } })).statusCode, 200);
+  const joined = await call("POST", `challenges/${code}/join`, { as: sofie, body: { shareSteps: true } });
+  assert.equal(joined.statusCode, 200);
+  // The app decodes ChallengeRef { id, code, status }: a missing key fails the whole join on the phone.
+  assert.deepEqual(Object.keys(joined.body).sort(), ["code", "id", "status"]);
+  assert.equal(joined.body.status, "active", "The second person starts the challenge");
 
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Copenhagen" }).format(new Date());
   const progress = await call("POST", `challenges/${id}/progress`, { as: sofie, body: {
