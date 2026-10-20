@@ -10,7 +10,7 @@
 // DELETE challenges/<id>/members/<memberId>  leave (yourself) or remove (creator)
 import { handle, methodNotAllowed, rateLimit, routeOf } from "../../lib/challenges/http.js";
 import {
-  ApiError, board, cheer, createChallenge, join, previewByCode, recordProgress, removeMember,
+  ApiError, board, cheer, createChallenge, debugEnd, join, previewByCode, recordProgress, removeMember,
 } from "../../lib/challenges/service.js";
 
 export default async function handler(req, res) {
@@ -50,6 +50,7 @@ export default async function handler(req, res) {
     });
   }
   if (is("POST", "*", "cheer")) return handle(req, res, { route }, ({ memberId, json }) => cheer(memberId, parts[0], json));
+  if (is("POST", "*", "debug-end")) return handle(req, res, { route }, ({ memberId }) => debugEnd(memberId, parts[0]));
   if (is("DELETE", "*", "members", "*")) {
     return handle(req, res, { route }, ({ memberId }) => removeMember(memberId, parts[0], parts[2]));
   }

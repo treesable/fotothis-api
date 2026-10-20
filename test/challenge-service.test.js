@@ -3,7 +3,7 @@ import { after, beforeEach, test } from "node:test";
 import { secretFor } from "../lib/challenges/auth.js";
 import { _resetSent, sent } from "../lib/challenges/notify.js";
 import {
-  board, cheer, createChallenge, createMember, join, me, previewByCode, recordProgress, removeMember, updateMember,
+  board, cheer, createChallenge, createMember, debugEnd, join, me, previewByCode, recordProgress, removeMember, updateMember,
 } from "../lib/challenges/service.js";
 import { _closeForTests, freshDatabase, query, skipWithoutDatabase } from "./db-helpers.js";
 
@@ -222,4 +222,19 @@ test("after 7 days the challenge ends once, for everyone", { skip }, async () =>
   assert.deepEqual(sent.map((m) => m.kind), ["complete"]);
   await assert.rejects(recordProgress(creator.memberId, challenge.id, outsideDay("2026-10-27"), later), errorCode("challenge_ended"));
   assert.equal((await me(creator.memberId)).challenge, null, "Free to start another round");
+});
+
+test("the debug end only works with CHALLENGE_DEBUG=1", { skip }, async () => {
+  const { creator, challenge } = await crewOf(2);
+  delete process.env.CHALLENGE_DEBUG;
+  await assert.rejects(debugEnd(creator.memberId, challenge.id, hours(1)), errorCode("not_found"));
+  process.env.CHALLENGE_DEBUG = "1";
+  try {
+    _resetSent();
+    await debugEnd(creator.memberId, challenge.id, hours(1));
+    assert.equal((await board(creator.memberId, challenge.id, hours(1))).challenge.status, "ended");
+    assert.deepEqual(sent.map((m) => m.kind), ["complete"]);
+  } finally {
+    delete process.env.CHALLENGE_DEBUG;
+  }
 });
