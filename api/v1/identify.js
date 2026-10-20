@@ -3,7 +3,7 @@
 // Headers: x-api-secret, x-device-id, x-app-attest-key-id + x-app-attest-assertion (over the
 // exact body bytes), x-transaction-id (App Store, once subscriptions exist).
 // Answers: 200 { species | null, facts, factsSource ("wikipedia" | "model"), remainingToday }, 429 { queued: true } over the trial cap.
-import { AttestError, verifyAssertion } from "../../lib/appattest.js";
+import { checkAppAttest } from "../../lib/attest-gate.js";
 import { tierFor } from "../../lib/appstore.js";
 import { refundId, secondsUntilReset, takeId } from "../../lib/cap.js";
 import { config } from "../../lib/config.js";
@@ -29,20 +29,9 @@ export default async function handler(req, res) {
   if (!image?.length || image.length > config.maxImageBytes) return send(res, 400, { error: "A JPEG photo is required" });
 
   // Who is asking: the attested key when it checks out, else the app's install id.
-  const keyId = header(req, "x-app-attest-key-id");
-  const assertion = header(req, "x-app-attest-assertion");
-  let device = header(req, "x-device-id");
-  if (config.appAttestMode !== "off") {
-    try {
-      if (!keyId || !assertion) throw new AttestError("No assertion");
-      await verifyAssertion({ keyId, assertion, body });
-      device = `key:${keyId}`;
-    } catch (error) {
-      if (!(error instanceof AttestError)) console.error("assertion check:", error);
-      if (config.appAttestMode === "enforce") return send(res, 401, { error: "Unauthorized" });
-      console.warn(`App Attest (log mode): ${error.message}`);
-    }
-  }
+  const gate = await checkAppAttest(req, body);
+  if (!gate.ok) return send(res, 401, { error: "Unauthorized" });
+  const device = gate.device;
   if (!device || device.length > 200) return send(res, 400, { error: "x-device-id is required" });
 
   const tier = await tierFor(header(req, "x-transaction-id"));
