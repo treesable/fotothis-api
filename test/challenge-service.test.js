@@ -127,8 +127,10 @@ test("progress builds the board: points, ranking, dots, goal, feed", { skip }, a
   assert.equal(first.days.length, 7);
   assert.equal(first.days[1], "future");
   assert.equal(second.isMe, true);
-  assert.equal(second.days[0], "steps", "3,000+ steps without a photo");
-  assert.deepEqual(view.goal, { daysOutside: 1, target: 10 });
+  assert.equal(second.days[0], "steps", "5,000+ steps without a photo: a walk day");
+  assert.deepEqual([second.walkDays, second.points], [1, 5]);
+  // Active days together: Marcel's photo day + Sofie's walk day.
+  assert.deepEqual(view.goal, { daysOutside: 2, target: 10 });
   assert.deepEqual(view.feed.map((item) => item.kind), ["new_species", "outside", "started", "joined"]);
   assert.deepEqual(view.feed[0].data, { name: "Common Oak" });
   assert.deepEqual(sent.map((m) => m.kind), ["joined", "outside"]);

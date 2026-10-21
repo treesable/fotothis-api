@@ -32,10 +32,6 @@ test("an emergency unlock is -10, and a day can go negative", () => {
   assert.equal(dayScore(day({ outside: true, photos: 1, emergencyUnlocks: 1, lockedMinutes: 180 })).points, 10 + 2 - 10 + 3);
 });
 
-test("steps don't score", () => {
-  assert.equal(dayScore(day({ steps: 25_000 })).points, 0);
-});
-
 test("the spec's example adds up", () => {
   // 4 days outside, 3 new plants, 6 photos, 31 h locked, no emergency unlock = 40 + 15 + 12 + 31 = 98.
   const days = [
@@ -45,7 +41,20 @@ test("the spec's example adds up", () => {
     day({ localDate: "2026-10-23", outside: true, photos: 1, lockedMinutes: 8 * 60 + 30 }),
   ];
   const score = challengeScore(days);
-  assert.deepEqual(score, { daysOutside: 4, newSpecies: 3, photos: 6, lockedHours: 31, emergencyUnlocks: 0, points: 98 });
+  assert.deepEqual(score, { daysOutside: 4, walkDays: 0, newSpecies: 3, photos: 6, lockedHours: 31, emergencyUnlocks: 0, points: 98 });
+});
+
+test("a walk day (no photo, 5,000+ steps) is worth 5; fewer steps or hidden steps, nothing", () => {
+  assert.equal(dayScore(day({ outside: false, photos: 0, steps: 5_000 })).points, 5);
+  assert.equal(dayScore(day({ outside: false, photos: 0, steps: 4_999 })).points, 0);
+  assert.equal(dayScore(day({ outside: false, photos: 0, steps: null })).points, 0);
+  // A photo day is a photo day, however far you walked.
+  assert.equal(dayScore(day({ outside: true, photos: 1, steps: 12_000 })).points, 10 + 2);
+  const score = challengeScore([
+    day({ localDate: "2026-10-20", outside: false, photos: 0, steps: 8_000 }),
+    day({ localDate: "2026-10-21", outside: true, photos: 1 }),
+  ]);
+  assert.deepEqual([score.walkDays, score.daysOutside, score.points], [1, 1, 5 + 10 + 2]);
 });
 
 test("a day sent twice counts once (the last one wins)", () => {
