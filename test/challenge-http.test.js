@@ -73,6 +73,10 @@ test("a full round: create, join, progress, board", { skip }, async () => {
   assert.equal(renamed.body.nickname, "Sofie B");
 
   assert.equal((await call("DELETE", `challenges/${id}/members/${sofie.memberId}`, { as: sofie })).statusCode, 200);
+  const deleted = await call("DELETE", "members/me", { as: sofie });
+  assert.equal(deleted.statusCode, 200);
+  assert.deepEqual(deleted.body, { deleted: true });
+  assert.equal((await call("GET", "members/me", { as: sofie })).statusCode, 401);
 });
 
 test("no app secret, no signature, a wrong secret or an old timestamp: 401", { skip }, async () => {

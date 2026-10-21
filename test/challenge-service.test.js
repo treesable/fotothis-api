@@ -3,7 +3,7 @@ import { after, beforeEach, test } from "node:test";
 import { secretFor } from "../lib/challenges/auth.js";
 import { _resetSent, sent } from "../lib/challenges/notify.js";
 import {
-  board, cheer, createChallenge, createMember, debugEnd, join, me, previewByCode, recordProgress, removeMember, updateMember,
+  board, cheer, createChallenge, createMember, debugEnd, deleteMember, join, me, previewByCode, recordProgress, removeMember, updateMember,
 } from "../lib/challenges/service.js";
 import { _closeForTests, freshDatabase, query, skipWithoutDatabase } from "./db-helpers.js";
 
@@ -209,6 +209,31 @@ test("when the creator leaves, the longest-standing member takes over", { skip }
   const { creator, challenge, others: [sofie] } = await crewOf(3);
   await removeMember(creator.memberId, challenge.id, creator.memberId, hours(1));
   assert.equal((await query("select creator_id from challenges")).rows[0].creator_id, sofie.memberId);
+});
+
+test("deleting my data removes me everywhere; the crew keeps going without me", { skip }, async () => {
+  const { creator, challenge, others: [sofie, ola] } = await crewOf(3);
+  await recordProgress(creator.memberId, challenge.id, outsideDay("2026-10-20"), hours(1));
+  await cheer(creator.memberId, challenge.id, { to: sofie.memberId, kind: "cheer" }, hours(1));
+  await deleteMember(creator.memberId, hours(2));
+  const count = async (sql) => (await query(sql, [creator.memberId])).rows[0].n;
+  assert.equal(await count("select count(*)::int as n from members where id = $1"), 0);
+  assert.equal(await count("select count(*)::int as n from challenge_members where member_id = $1"), 0);
+  assert.equal(await count("select count(*)::int as n from daily_progress where member_id = $1"), 0);
+  assert.equal(await count("select count(*)::int as n from events where member_id = $1"), 0);
+  assert.equal(await count("select count(*)::int as n from cheers where from_member = $1 or to_member = $1"), 0);
+  assert.equal((await query("select creator_id from challenges")).rows[0].creator_id, sofie.memberId);
+  const view = await board(ola.memberId, challenge.id, hours(2));
+  assert.deepEqual(view.members.map((m) => m.nickname).sort(), ["Friend 1", "Friend 2"]);
+  // Twice is fine (the phone retries after a lost answer).
+  assert.deepEqual(await deleteMember(creator.memberId, hours(3)), { deleted: true });
+});
+
+test("deleting my data takes a challenge nobody else is in with it", { skip }, async () => {
+  const creator = await member("Marcel");
+  await createChallenge(creator.memberId, t0);
+  await deleteMember(creator.memberId, hours(1));
+  assert.equal((await query("select count(*)::int as n from challenges")).rows[0].n, 0);
 });
 
 test("after 7 days the challenge ends once, for everyone", { skip }, async () => {
