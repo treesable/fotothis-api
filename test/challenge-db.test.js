@@ -22,7 +22,7 @@ async function addProgress(challengeId, memberId, localDate = "2026-11-20") {
 test("migrations apply once", { skip }, async () => {
   await migrate();
   const { rows } = await query("select name from schema_migrations");
-  assert.deepEqual(rows.map((row) => row.name), ["001_challenges.sql"]);
+  assert.deepEqual(rows.map((row) => row.name), ["001_challenges.sql", "002_lock_marks.sql"]);
 });
 
 test("two cold starts migrating at once both succeed, each migration applied once", { skip }, async () => {
@@ -33,7 +33,7 @@ test("two cold starts migrating at once both succeed, each migration applied onc
   try {
     await Promise.all([migrate(), other.migrate()]);
     const { rows } = await query("select name from schema_migrations");
-    assert.deepEqual(rows.map((row) => row.name), ["001_challenges.sql"]);
+    assert.deepEqual(rows.map((row) => row.name), ["001_challenges.sql", "002_lock_marks.sql"]);
   } finally {
     await other._closeForTests();
   }

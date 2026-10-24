@@ -159,6 +159,17 @@ test("progress outside the challenge's days, before the start or in the future d
     errorCode("bad_progress"));
 });
 
+test("lock marks show on the board without points, and old progress reads as none", { skip }, async () => {
+  const { creator, challenge, others: [sofie] } = await crewOf(2);
+  await recordProgress(sofie.memberId, challenge.id, outsideDay("2026-10-20", { lockChanges: 1, locksOff: 1 }), hours(1));
+  await recordProgress(creator.memberId, challenge.id, outsideDay("2026-10-20"), hours(1));
+  const view = await board(creator.memberId, challenge.id, hours(2));
+  const friend = view.members.find((m) => !m.isMe);
+  assert.deepEqual([friend.lockChangeDays, friend.locksOffDays, friend.points], [1, 1, 12]);
+  const mine = view.members.find((m) => m.isMe);
+  assert.deepEqual([mine.lockChangeDays, mine.locksOffDays], [0, 0], "Not sent (older app): no mark");
+});
+
 test("steps stay private without the switch, and switching off hides past steps", { skip }, async () => {
   const { creator, challenge, others: [sofie] } = await crewOf(2);
   await recordProgress(sofie.memberId, challenge.id, outsideDay("2026-10-20", { outside: false, photos: 0, steps: 9000 }), hours(1));

@@ -41,7 +41,9 @@ test("the spec's example adds up", () => {
     day({ localDate: "2026-10-23", outside: true, photos: 1, lockedMinutes: 8 * 60 + 30 }),
   ];
   const score = challengeScore(days);
-  assert.deepEqual(score, { daysOutside: 4, walkDays: 0, newSpecies: 3, photos: 6, lockedHours: 31, emergencyUnlocks: 0, points: 98 });
+  assert.deepEqual(score, {
+    daysOutside: 4, walkDays: 0, newSpecies: 3, photos: 6, lockedHours: 31, emergencyUnlocks: 0, lockChangeDays: 0, locksOffDays: 0, points: 98,
+  });
 });
 
 test("a walk day (no photo, 5,000+ steps) is worth 5; fewer steps or hidden steps, nothing", () => {
@@ -116,6 +118,28 @@ test("no days yet: 0 points, still ranked", () => {
   assert.equal(ranked[0].rank, 1);
 });
 
+test("lock marks are counted but cost no points", () => {
+  const marked = dayScore(day({ outside: true, photos: 1, lockChanges: 1, locksOff: 1 }));
+  assert.equal(marked.points, 10 + 2);
+  assert.equal(marked.lockChangeDays, 1);
+  assert.equal(marked.locksOffDays, 1);
+  const score = challengeScore([
+    day({ localDate: "2026-10-20", lockChanges: 1 }),
+    day({ localDate: "2026-10-21", lockChanges: 1, locksOff: 1 }),
+    day({ localDate: "2026-10-21", lockChanges: 1, locksOff: 1 }),
+  ]);
+  assert.equal(score.lockChangeDays, 2, "One mark per day, a re-sent day counts once");
+  assert.equal(score.locksOffDays, 1);
+  assert.equal(score.points, 0);
+});
+
+test("lock marks are optional for older app builds", () => {
+  const result = validateProgress({ localDate: "2026-10-20", outside: false, photos: 0, lockedMinutes: 0, emergencyUnlocks: 0 });
+  assert.equal(result.day.lockChanges, 0);
+  assert.equal(result.day.locksOff, 0);
+  assert.equal(dayScore({ ...result.day, lockChanges: undefined, locksOff: undefined }).lockChangeDays, 0, "Old rows without the fields");
+});
+
 test("valid progress passes and is cleaned", () => {
   const result = validateProgress({
     localDate: "2026-10-20", outside: true, photos: 2, newSpecies: [" Common Oak "], lockedMinutes: 300, emergencyUnlocks: 0, steps: 8412,
@@ -140,6 +164,9 @@ test("impossible values are refused", () => {
     "more than 24 h locked": { lockedMinutes: 24 * 60 + 1 },
     "negative locked time": { lockedMinutes: -5 },
     "two emergency unlocks": { emergencyUnlocks: 2 },
+    "two lock changes": { lockChanges: 2 },
+    "lock changes as a boolean": { lockChanges: true },
+    "negative locks off": { locksOff: -1 },
     "steps over 100,000": { steps: 100_001 },
     "negative steps": { steps: -1 },
     "a bad date": { localDate: "20-10-2026" },
