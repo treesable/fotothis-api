@@ -51,6 +51,11 @@ test("names the plant with facts", async () => {
   assert.equal(res.body.remainingToday, 2);
 });
 
+test("the species carries a rarity (null without a GBIF id)", async () => {
+  const res = await call();
+  assert.equal(res.body.species.rarity, null);
+});
+
 test("wrong or missing secret: 401, nothing called", async () => {
   assert.equal((await call({ secret: "nope" })).statusCode, 401);
   assert.equal(calls.plantnet, 0);

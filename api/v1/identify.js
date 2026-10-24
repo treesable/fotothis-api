@@ -3,6 +3,7 @@
 // Headers: x-api-secret, x-device-id, x-app-attest-key-id + x-app-attest-assertion (over the
 // exact body bytes), x-transaction-id (App Store, once subscriptions exist).
 // Answers: 200 { species | null, facts, factsSource ("wikipedia" | "model"), remainingToday }, 429 { queued: true } over the trial cap.
+// species.rarity: "common" | "seasonal" | "rare" | null (GBIF records near the photo, lib/rarity.js).
 import { checkAppAttest } from "../../lib/attest-gate.js";
 import { tierFor } from "../../lib/appstore.js";
 import { refundId, secondsUntilReset, takeId } from "../../lib/cap.js";
@@ -10,6 +11,7 @@ import { config } from "../../lib/config.js";
 import { factsFor } from "../../lib/facts.js";
 import { hasValidSecret, header, readBody, send } from "../../lib/http.js";
 import { identify } from "../../lib/plantnet.js";
+import { rarityFor } from "../../lib/rarity.js";
 
 const LANGS = new Set(["en", "da", "de", "fr", "es", "nl"]);
 
@@ -48,9 +50,12 @@ export default async function handler(req, res) {
       await refundId(device, tier);
       return send(res, 200, { species: null, facts: [], remainingToday: allowance.remaining === null ? null : allowance.remaining + 1 });
     }
-    const { facts, source } = await factsFor(species, lang);
-    console.log(`identify: ${species.scientificName} ${species.score} (${tier}), facts from ${source}`);
-    return send(res, 200, { species, facts, factsSource: source, remainingToday: allowance.remaining });
+    const [{ facts, source }, rarity] = await Promise.all([
+      factsFor(species, lang),
+      rarityFor(species, { lat: request.lat, lng: request.lng }).catch(() => null),
+    ]);
+    console.log(`identify: ${species.scientificName} ${species.score} (${tier}), facts from ${source}, rarity ${rarity}`);
+    return send(res, 200, { species: { ...species, rarity }, facts, factsSource: source, remainingToday: allowance.remaining });
   } catch (error) {
     await refundId(device, tier);
     console.error("identify:", error);
