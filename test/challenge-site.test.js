@@ -40,7 +40,7 @@ test("the icon is served", async () => {
 });
 
 test("home, privacy and terms pages are served, and vercel.json routes them", async () => {
-  for (const [page, text] of [["home", "Snap nature"], ["privacy", "Pl@ntNet"], ["terms", "Standard End User License Agreement"]]) {
+  for (const [page, text] of [["home", "Trade scrolling for exploring"], ["privacy", "Pl@ntNet"], ["terms", "Standard End User License Agreement"]]) {
     const res = await get(`/api/site?page=${page}`);
     assert.equal(res.statusCode, 200, page);
     assert.match(res.headers["content-type"], /text\/html/);
